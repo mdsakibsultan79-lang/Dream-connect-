@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#075E54"><link rel="manifest" href="manifest.json"><title>Dream Connect</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#071016;color:#e9edef;font-family:Arial,sans-serif}.app{max-width:440px;margin:auto;min-height:100vh;background:#0b141a}.top{height:68px;background:#202c33;display:flex;align-items:center;padding:0 14px;gap:12px}.logo{width:43px;height:43px;border-radius:14px;background:#00a884;display:grid;place-items:center;font-size:23px}.brand b{font-size:18px}.brand small{display:block;color:#8696a0;margin-top:3px}.install{margin-left:auto;background:#25d366;border:0;color:#fff;padding:9px 11px;border-radius:10px;font-weight:700}.page{padding:18px}.hero{text-align:center;padding:28px 8px}.hero .big{width:92px;height:92px;margin:auto;border-radius:27px;background:linear-gradient(135deg,#00a884,#25d366);display:grid;place-items:center;font-size:47px}.hero h1{font-size:29px;margin:16px 0 7px}.hero p,.muted{color:#8696a0;font-size:13px;line-height:1.55}.btn{width:100%;padding:14px;border:0;border-radius:12px;margin-top:10px;font-weight:800;font-size:14px}.green{background:#00a884;color:#fff}.dark{background:#202c33;color:#fff;border:1px solid #2a3942}.card{background:#202c33;border:1px solid #2a3942;border-radius:15px;padding:15px;margin-top:12px}.input{width:100%;padding:13px;margin-top:10px;border-radius:10px;border:1px solid #2a3942;background:#2a3942;color:#fff;outline:0}.bar{display:flex;gap:8px}.back{font-size:25px;cursor:pointer}.row{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #2a3942}.av{width:48px;height:48px;border-radius:50%;background:#075e54;display:grid;place-items:center;font-weight:800}.row main{flex:1}.row small{display:block;color:#8696a0;margin-top:4px}.chat{height:calc(100vh - 68px);display:flex;flex-direction:column}.chathead{background:#202c33;padding:10px 12px;display:flex;align-items:center;gap:10px}.msgs{flex:1;overflow:auto;padding:14px;background:#111b21}.bubble{max-width:78%;padding:9px 12px;margin:6px 0;border-radius:12px;background:#202c33;word-break:break-word}.mine{margin-left:auto;background:#005c4b}.composer{padding:8px;background:#202c33;display:flex;gap:7px}.composer input{flex:1;border:0;border-radius:22px;padding:12px 15px;background:#2a3942;color:#fff;outline:0}.send{width:44px;border:0;border-radius:50%;background:#00a884;color:#fff;font-size:18px}.hidden{display:none!important}.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#202c33;border:1px solid #3a4a52;padding:11px 14px;border-radius:10px;font-size:12px;display:none;z-index:5}
+</style></head>
+<body><div class="app">
+<header class="top"><div class="logo">💬</div><div class="brand"><b>Dream Connect</b><small>Simple • Private • Connected</small></div><button id="install" class="install">Install</button></header>
+
+<section id="home"><div class="page"><div class="hero"><div class="big">💬</div><h1>Dream Connect</h1><p>বন্ধুদের সাথে connect করার জন্য আমাদের প্রথম সুন্দর version.</p></div>
+<button class="btn green" onclick="openPage('chats')">💬 Open Chats</button><button class="btn dark" onclick="openPage('add')">👤 Add Friend</button>
+<div class="card"><b>📱 Install</b><div class="muted">Install button চাপুন। Browser support করলে app install হবে। না হলে Chrome-এর ⋮ → Add to Home screen / Install app ব্যবহার করুন।</div></div>
+<div class="card"><b>🚀 Next Step</b><div class="muted">এটি V1। এখন আপনার ফোনে chat data save হবে। পরের version-এ secure online server যোগ করে সবার মধ্যে real-time chat চালু করা যাবে।</div></div>
+</div></section>
+
+<section id="add" class="hidden"><div class="page"><div class="bar"><span class="back" onclick="openPage('home')">‹</span><b>Add Friend</b></div><input id="name" class="input" placeholder="Friend name"><input id="phone" class="input" placeholder="Phone number"><button class="btn green" onclick="addFriend()">Save Friend</button></div></section>
+
+<section id="chats" class="hidden"><div class="page"><div class="bar"><span class="back" onclick="openPage('home')">‹</span><b style="flex:1">Chats</b><button class="dark" onclick="openPage('add')">＋</button></div><div id="list"></div></div></section>
+
+<section id="room" class="chat hidden"><div class="chathead"><span class="back" onclick="openPage('chats')">‹</span><div id="avatar" class="av">D</div><b id="roomname">Friend</b></div><div id="messages" class="msgs"></div><div class="composer"><input id="message" placeholder="Message..."><button class="send" onclick="send()">➤</button></div></section>
+<div id="toast" class="toast"></div>
+</div>
+<script>
+let friends=JSON.parse(localStorage.getItem('dc_friends')||'[]'), chats=JSON.parse(localStorage.getItem('dc_chats')||'{}'), current=null, promptEvent=null;
+const $=id=>document.getElementById(id);
+function openPage(id){['home','add','chats','room'].forEach(x=>$(x).classList.toggle('hidden',x!==id));if(id==='chats')renderList();if(id==='room')renderRoom()}
+function toast(t){$('toast').textContent=t;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',2200)}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function addFriend(){let n=$('name').value.trim(),p=$('phone').value.trim();if(!n||!p)return toast('Name এবং phone number দিন');friends.push({id:Date.now(),name:n,phone:p});localStorage.setItem('dc_friends',JSON.stringify(friends));$('name').value='';$('phone').value='';toast('Friend added ✅');openPage('chats')}
+function renderList(){if(!friends.length){$('list').innerHTML='<div class="card" style="text-align:center"><b>No friends yet</b><div class="muted">Add a friend to start.</div></div>';return}$('list').innerHTML=friends.map(f=>{let m=(chats['c'+f.id]||[]).slice(-1)[0];return `<div class="row" onclick="openChat(${f.id})"><div class="av">${esc(f.name[0].toUpperCase())}</div><main><b>${esc(f.name)}</b><small>${m?esc(m.text):esc(f.phone)}</small></main>›</div>`}).join('')}
+function openChat(id){current=friends.find(f=>f.id===id);$('roomname').textContent=current.name;$('avatar').textContent=current.name[0].toUpperCase();openPage('room')}
+function renderRoom(){if(!current)return;let m=chats['c'+current.id]||[];$('messages').innerHTML=m.length?m.map(x=>`<div class="bubble ${x.me?'mine':''}">${esc(x.text)}</div>`).join(''):'<div class="muted" style="text-align:center;margin-top:30px">Start your conversation 👋</div>';$('messages').scrollTop=$('messages').scrollHeight}
+function send(){let t=$('message').value.trim();if(!t||!current)return;let k='c'+current.id;chats[k]??=[];chats[k].push({text:t,me:true,time:Date.now()});localStorage.setItem('dc_chats',JSON.stringify(chats));$('message').value='';renderRoom()}
+$('message').addEventListener('keydown',e=>{if(e.key==='Enter')send()});
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();promptEvent=e});
+$('install').onclick=async()=>{if(promptEvent){promptEvent.prompt();await promptEvent.userChoice;promptEvent=null}else toast('Chrome ⋮ → Add to Home screen / Install app')}
+if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script></body></html>
